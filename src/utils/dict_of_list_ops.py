@@ -4,7 +4,7 @@ class DictOfListOperator:
 
     def __call__(self, key, value):
         if key in self.collection:
-            self.collection[key].append()
+            self.collection[key].append(value)
         else:
             self.collection.update({key: [value]})
 

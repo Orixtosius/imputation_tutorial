@@ -3,6 +3,7 @@ from sklearn.preprocessing import *
 from sklearn.preprocessing._encoders import _BaseEncoder
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import LinearRegression
+from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
 from src.utils.dict_of_list_ops import DictOfListOperator
 
@@ -29,12 +30,12 @@ class PipelineConstructor:
         transformer_config = [self.__extract_transformer_for_feature(key, steps) 
                               for key, steps in grouped_preprocess_config.items()]
 
-        preprocessor = ColumnTransformer(transformers=transformer_config)
-        estimator = self.__extract_estimator(self.estimator_config[0], self.estimator_config[1])
+        preprocessor = ColumnTransformer(transformers=transformer_config, remainder="passthrough")
+        estimator = self.__extract_estimator(self.estimator_config[1])
 
         pipeline = Pipeline(steps=[
             ("preprocessor", preprocessor),
-            ("estimator", estimator)
+            estimator
         ])
 
         return pipeline
@@ -46,13 +47,12 @@ class PipelineConstructor:
         return extracted_step
     
     def __extract_transformer_for_feature(self, key: str, steps: list[tuple[str, dict, tuple]]) -> tuple[str, _BaseEncoder, tuple]:
-        features = steps[-1]
+        features = steps[0][-1]
         pipeline_steps = [self.__extract_steps_for_feature(s[:-1]) for s in steps]
-        transformer = Pipeline(steps=[pipeline_steps])
+        transformer = Pipeline(steps=pipeline_steps)
         transformer_step = (key, transformer, features)
         return transformer_step
     
-    def __extract_estimator(self, key: str, step: tuple[str, dict]) -> tuple[str, BaseEstimator]:
+    def __extract_estimator(self, step: tuple[str, dict]) -> tuple[str, BaseEstimator]:
         estimator = self.__extract_steps_for_feature(step)
-        estimator_step = (key, estimator)
-        return estimator_step
+        return estimator

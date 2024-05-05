@@ -22,7 +22,7 @@ class TestConstructor(unittest.TestCase):
         self.assertIsInstance(self.first_step[1], ColumnTransformer)
 
     def test_first_step_params(self):
-        param = self.first_step[1].get_params()["transformers"][0][1].steps[0][0][1].get_params()["with_centering"]
+        param = self.first_step[1].get_params()["transformers"][0][1].steps[0][1].get_params()["with_centering"]
         self.assertFalse(param)
 
     def test_building_second_step(self):
