@@ -6,12 +6,14 @@ from sklearn.linear_model import LinearRegression
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
 from src.utils.dict_of_list_ops import DictOfListOperator
+from src.pipeline.missforest_transformer import MissForestImputer
 
 
 class PipelineConstructor:
 
     def __init__(self, config: list[tuple[str, str, dict[str, any], tuple[str]]]) -> None:
         self.config = config
+        self.imputer_config = self.estimator_config = None
         self.preprocess_operator = DictOfListOperator()
         self.__group_by_transformers()
     
@@ -23,6 +25,8 @@ class PipelineConstructor:
                 self.preprocess_operator.__call__(key, step_config)
             elif key.startswith("e"):
                 self.estimator_config = (key, step_config)
+            elif key.startswith("i"):
+                self.imputer_config = (key, step_config)
 
     def build(self) -> Pipeline:
         grouped_preprocess_config = self.preprocess_operator.get_collection()
@@ -30,15 +34,27 @@ class PipelineConstructor:
         transformer_config = [self.__extract_transformer_for_feature(key, steps) 
                               for key, steps in grouped_preprocess_config.items()]
 
-        preprocessor = ColumnTransformer(transformers=transformer_config, remainder="passthrough")
-        estimator = self.__extract_estimator(self.estimator_config[1])
+        pipeline_steps = []
+        if len(transformer_config):
+            processor_step = (
+                "preprocessor", 
+                ColumnTransformer(transformers=transformer_config, remainder="passthrough")
+            )
+            pipeline_steps.append(processor_step)
 
-        pipeline = Pipeline(steps=[
-            ("preprocessor", preprocessor),
-            estimator
-        ])
+        if self.imputer_config is not None:
+            imputer_step = self.__extract_steps_for_feature(self.imputer_config[1][:-1])
+            pipeline_steps.append(imputer_step)
 
-        return pipeline
+        if self.estimator_config is not None:
+            estimator = self.__extract_estimator(self.estimator_config[1])
+            pipeline_steps.append(estimator)
+
+        if len(pipeline_steps):
+            pipeline = Pipeline(steps=pipeline_steps)
+            return pipeline
+        
+        raise ValueError()
     
     def __extract_steps_for_feature(self, step_config: tuple[str, dict]) -> tuple[str, _BaseEncoder]:
         preprocessor, params = step_config
