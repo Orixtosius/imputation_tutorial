@@ -1,12 +1,7 @@
-import unittest
-from sklearn.preprocessing import RobustScaler
-from src.pipe_construction import PipelineConstructor
+import sys
+import os
 
 
-
-pipeline_config = [
-            ("RobustScaler", {"with_centering": False}),
-            ("OneHotEncoder", {"handle_unknown": 'ignore'})
-        ]
-constructor = PipelineConstructor(pipeline_config)
-constructor.build()
+print(os.path.dirname(__file__))
+print(os.path.join(os.path.dirname(__file__), '..'))
+print(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
