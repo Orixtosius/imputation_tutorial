@@ -7,8 +7,8 @@ from config import test_config, test_config_3
 
 class TestMediator(unittest.TestCase):
     def setUp(self) -> None:
-        self.mediator = TrainingMediator(test_config)
-        self.mediator2 = TrainingMediator(test_config_3)
+        self.mediator = TrainingMediator()
+        self.mediator2 = TrainingMediator()
 
     def __format_input_data(self):
         X, y = fetch_openml("titanic", version=1, as_frame=True, return_X_y=True)
@@ -22,10 +22,10 @@ class TestMediator(unittest.TestCase):
 
     def test_mediation(self):
         X, y = self.__format_input_data()
-        scores = self.mediator(X, y)
+        scores = self.mediator(test_config_3, X, y, 0)
         print(scores)
 
     def test_mediation_case_2(self):
         X, y = self.__format_input_data()
-        scores = self.mediator2(X, y)
+        scores = self.mediator2(test_config, X, y, 0)
         print(scores)
